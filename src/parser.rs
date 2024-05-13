@@ -2,6 +2,7 @@ use chumsky::prelude::*;
 
 use crate::lexer::Token;
 
+#[derive(Debug)]
 pub enum LiteralValue {
     Number(f32),
     String(String),

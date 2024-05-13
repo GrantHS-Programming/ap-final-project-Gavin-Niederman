@@ -1,6 +1,7 @@
 use std::error::Error;
 
 use chumsky::Parser;
+use parser::expr;
 
 mod lexer;
 mod parser;
@@ -25,10 +26,17 @@ fn main() -> Result<(), Box<dyn Error>> {
                     return Err("Failed to parse".into());
                 }
             };
+            let expr = match expr().parse(tokens) {
+                Ok(tokens) => tokens,
+                Err(errors) => {
+                    for error in errors {
+                        println!("{:?}", error)
+                    }
+                    return Err("Failed to parse".into());
+                }
+            };
 
-            for token in tokens {
-                print!("{}", token)
-            }
+            println!("{:?}", expr)
         }
     }
 
