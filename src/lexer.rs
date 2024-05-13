@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use chumsky::prelude::*;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Token {
     Equals,
 
@@ -23,6 +23,9 @@ pub enum Token {
 
     Space,
     Newline,
+
+    True,
+    False,
 }
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -41,6 +44,8 @@ impl Display for Token {
             Token::Arrow => "->",
             Token::Space => " ",
             Token::Newline => "\n",
+            Token::False => "false",
+            Token::True => "true",
         };
 
         write!(f, "{}", string)
@@ -67,6 +72,9 @@ pub fn token() -> impl Parser<char, Token, Error = Simple<char>> {
     let space = just(" ").to(Token::Space);
     let newline = just("\n").to(Token::Newline);
 
+    let true_ = just("true").to(Token::True);
+    let false_ = just("false").to(Token::False);
+
     choice((
         // Arrow must take priority over minus
         arrow,
@@ -84,5 +92,7 @@ pub fn token() -> impl Parser<char, Token, Error = Simple<char>> {
         comma,
         space,
         newline,
+        true_,
+        false_
     ))
 }

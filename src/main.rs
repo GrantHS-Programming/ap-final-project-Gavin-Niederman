@@ -3,6 +3,7 @@ use std::error::Error;
 use chumsky::Parser;
 
 mod lexer;
+mod parser;
 
 #[derive(clap::Parser)]
 enum Cli {
