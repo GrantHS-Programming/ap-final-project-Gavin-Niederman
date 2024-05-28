@@ -113,7 +113,7 @@ pub fn token() -> impl Parser<char, Token, Error = Simple<char>> {
         '8' => Token::Eight,
         '9' => Token::Nine,
         '0' => Token::Zero,
-        _ => unreachable!()
+        _ => unreachable!(),
     });
 
     choice((
