@@ -89,7 +89,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                     return Err("Failed to lex".into());
                 }
             };
-            let expr = match expr().parse(tokens) {
+
+            println!("{tokens:?}");
+
+            let expr = match expr().then_ignore(end()).parse(tokens) {
                 Ok(tokens) => tokens,
                 Err(errors) => {
                     for error in errors {

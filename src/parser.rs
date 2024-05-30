@@ -16,7 +16,7 @@ pub enum Expr {
     Function { body: Box<Expr> },
 }
 
-pub fn expr() -> impl Parser<Token, Expr, Error = Simple<Token>> {
+fn literal() -> impl Parser<Token, LiteralValue, Error = Simple<Token>> {
     let boolean = just(Token::True)
         .or(just(Token::False))
         .map(|boolean| match boolean {
@@ -55,22 +55,25 @@ pub fn expr() -> impl Parser<Token, Expr, Error = Simple<Token>> {
         LiteralValue::Number(
             nums.into_iter()
                 .enumerate()
-                .map(|(i, val)| val * 10u64.pow(i as _))
-                .sum(),
+                .fold(0, |acc, (i, cur)| if cur != 0 { acc + cur * 10u64.pow(i as _) } else {acc * 10} )
         )
     });
-    let literal = choice((boolean, number)).map(Expr::Literal);
+    choice((boolean, number))
+}
 
-    let function = just(Token::LeftBrace)
-        .ignored()
-        .padded_by(just(Token::Space))
-        .then_ignore(just(Token::RightBrace))
-        .padded_by(just(Token::Space))
-        .then_ignore(just(Token::Arrow))
-        .padded_by(just(Token::Space))
-        .map(|_| Expr::Function {
-            body: Box::new(Expr::Literal(LiteralValue::Boolean(true))),
-        });
+pub fn expr() -> impl Parser<Token, Expr, Error = Simple<Token>> {
+    recursive(|expr| {
+        let literal = literal().map(Expr::Literal);
 
-    choice((literal, function))
+        let function = just(Token::LeftBrace)
+            .ignored()
+            .then_ignore(just(Token::RightBrace))
+            .then_ignore(just(Token::Arrow))
+            .then(expr)
+            .map(|(_, expr)| Expr::Function {
+                body: Box::new(expr),
+            });
+
+        function.or(literal)
+    })
 }
