@@ -61,5 +61,16 @@ pub fn expr() -> impl Parser<Token, Expr, Error = Simple<Token>> {
     });
     let literal = choice((boolean, number)).map(Expr::Literal);
 
-    literal
+    let function = just(Token::LeftBrace)
+        .ignored()
+        .padded_by(just(Token::Space))
+        .then_ignore(just(Token::RightBrace))
+        .padded_by(just(Token::Space))
+        .then_ignore(just(Token::Arrow))
+        .padded_by(just(Token::Space))
+        .map(|_| Expr::Function {
+            body: Box::new(Expr::Literal(LiteralValue::Boolean(true))),
+        });
+
+    choice((literal, function))
 }
