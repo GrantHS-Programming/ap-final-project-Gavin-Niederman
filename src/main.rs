@@ -1,7 +1,8 @@
-use std::error::Error;
+use std::{error::Error, fmt::format};
 
 use ariadne::{sources, ColorGenerator, Config, Label, Report, Span};
 use chumsky::{primitive::end, Parser};
+use clap::builder::Str;
 use lexer::Token;
 use parser::expr;
 
@@ -48,10 +49,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                                         .enumerate()
                                         .map(|(i, c)| {
                                             if let Some(c) = c {
-                                                let mut entry = match c {
-                                                    '\n' => String::from("'\\n'"),
-                                                    c => format!("'{c}'"),
-                                                };
+                                                let mut entry = format!("{c}");
                                                 if i < expected_len - 1 {
                                                     entry.push_str(", ")
                                                 }
@@ -114,10 +112,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                                         .enumerate()
                                         .map(|(i, c)| {
                                             if let Some(c) = c {
-                                                let mut entry = match c {
-                                                    Token::Newline => String::from("'\\n'"),
-                                                    c => format!("'{c}'"),
-                                                };
+                                                let mut entry = format!("{c}");
                                                 if i < expected_len - 1 {
                                                     entry.push_str(", ")
                                                 }
@@ -144,7 +139,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                             }
                             chumsky::error::SimpleReason::Unclosed { span, delimiter } => {
                                 report = report
-                                    .with_code("E0002")
+                                    .with_code("E0003")
                                     .with_message("Unclosed delimiter found.")
                                     .with_label(
                                         Label::new((source.as_str(), span.clone()))
@@ -161,7 +156,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                                     );
                             }
                             chumsky::error::SimpleReason::Custom(message) => {
-                                report = report.with_code("E0003")
+                                report = report.with_code("E0004")
                                 .with_message(message)
                                 .with_label(Label::new((source.as_str(), error.span())).with_color(colors.next()).with_message(error.label().unwrap_or_else(|| "Error occured here")))
                             }

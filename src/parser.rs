@@ -54,8 +54,9 @@ fn literal() -> impl Parser<Token, LiteralValue, Error = Simple<Token>> {
     .map(|nums| {
         LiteralValue::Number(
             nums.into_iter()
+                .rev()
                 .enumerate()
-                .fold(0, |acc, (i, cur)| if cur != 0 { acc + cur * 10u64.pow(i as _) } else {acc * 10} )
+                .fold(0, |acc, (i, cur)| acc + cur * 10u64.pow(i as _) )
         )
     });
     choice((boolean, number))

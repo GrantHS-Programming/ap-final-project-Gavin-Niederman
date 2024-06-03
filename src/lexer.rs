@@ -22,7 +22,6 @@ pub enum Token {
 
     Arrow,
 
-    Space,
     Newline,
 
     True,
@@ -56,8 +55,7 @@ impl Display for Token {
             Token::RightParen => ")",
             Token::Comma => ",",
             Token::Arrow => "->",
-            Token::Space => " ",
-            Token::Newline => "\n",
+            Token::Newline => "\\n",
             Token::False => "false",
             Token::True => "true",
             Token::Quote => "\"",
@@ -94,7 +92,6 @@ pub fn token() -> impl Parser<char, Token, Error = Simple<char>> {
 
     let arrow = just("->").to(Token::Arrow);
 
-    let space = just(" ").to(Token::Space);
     let newline = just("\n").to(Token::Newline);
 
     let true_ = just("true").to(Token::True);
@@ -130,11 +127,10 @@ pub fn token() -> impl Parser<char, Token, Error = Simple<char>> {
         left_paren,
         right_paren,
         comma,
-        space,
         newline,
         true_,
         false_,
         quote,
         number,
-    ))
+    )).padded_by(just(" ").repeated())
 }
