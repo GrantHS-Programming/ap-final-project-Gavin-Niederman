@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use ariadne::{sources, ColorGenerator, Label, Report, Span};
+use ariadne::{sources, ColorGenerator, Config, Label, Report, Span};
 use chumsky::{primitive::end, Parser};
 use lexer::Token;
 use parser::expr;
@@ -102,9 +102,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                             ariadne::ReportKind::Error,
                             source.as_str(),
                             error.span().start(),
-                        )
-                        .with_code("E0002")
-                        .with_message("Failed to parse.");
+                        );
 
                         match error.reason() {
                             chumsky::error::SimpleReason::Unexpected => {
@@ -135,14 +133,38 @@ fn main() -> Result<(), Box<dyn Error>> {
                                         .unwrap_or_else(|| String::from("this"))
                                 );
 
-                                report = report.with_label(
-                                    Label::new((source.as_str(), error.span()))
-                                        .with_message(expected_label)
-                                        .with_color(colors.next()),
-                                );
+                                report = report
+                                    .with_code("E0002")
+                                    .with_message("Unexpected character found.")
+                                    .with_label(
+                                        Label::new((source.as_str(), error.span()))
+                                            .with_message(expected_label)
+                                            .with_color(colors.next()),
+                                    );
                             }
-                            chumsky::error::SimpleReason::Unclosed { span, delimiter } => todo!(),
-                            chumsky::error::SimpleReason::Custom(_) => todo!(),
+                            chumsky::error::SimpleReason::Unclosed { span, delimiter } => {
+                                report = report
+                                    .with_code("E0002")
+                                    .with_message("Unclosed delimiter found.")
+                                    .with_label(
+                                        Label::new((source.as_str(), span.clone()))
+                                            .with_color(colors.next())
+                                            .with_message("Unclosed delimiter started here!"),
+                                    )
+                                    .with_label(
+                                        Label::new((source.as_str(), error.span()))
+                                            .with_color(colors.next())
+                                            .with_order(1)
+                                            .with_message(format!(
+                                                "Expected a closing '{delimiter}' in this code."
+                                            )),
+                                    );
+                            }
+                            chumsky::error::SimpleReason::Custom(message) => {
+                                report = report.with_code("E0003")
+                                .with_message(message)
+                                .with_label(Label::new((source.as_str(), error.span())).with_color(colors.next()).with_message(error.label().unwrap_or_else(|| "Error occured here")))
+                            }
                         }
                         report
                             .finish()
