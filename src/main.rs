@@ -3,11 +3,13 @@ use std::{error::Error, fmt::format};
 use ariadne::{sources, ColorGenerator, Config, Label, Report, Span};
 use chumsky::{primitive::end, Parser};
 use clap::builder::Str;
+use enterpreter::interpret;
 use lexer::Token;
 use parser::expr;
 
 mod lexer;
 mod parser;
+pub mod enterpreter;
 
 #[derive(clap::Parser)]
 enum Cli {
@@ -169,7 +171,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 }
             };
 
-            println!("{:?}", expr)
+            println!("{:?}", interpret(expr).unwrap());
         }
     }
 

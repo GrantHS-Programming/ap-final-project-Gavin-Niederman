@@ -14,6 +14,7 @@ pub enum LiteralValue {
 pub enum Expr {
     Literal(LiteralValue),
     Function { body: Box<Expr> },
+    Call { ident: Box<Expr> }
 }
 
 fn literal() -> impl Parser<Token, LiteralValue, Error = Simple<Token>> {
@@ -70,11 +71,13 @@ pub fn expr() -> impl Parser<Token, Expr, Error = Simple<Token>> {
             .ignored()
             .then_ignore(just(Token::RightBrace))
             .then_ignore(just(Token::Arrow))
-            .then(expr)
+            .then(expr.clone())
             .map(|(_, expr)| Expr::Function {
                 body: Box::new(expr),
             });
 
-        function.or(literal)
+        let call = just(Token::Colon).ignore_then(expr).then_ignore(just(Token::LeftBrace)).then_ignore(just(Token::RightBrace)).map(|expr| Expr::Call { ident: Box::new(expr) });
+
+        call.or(function).or(literal)
     })
 }
