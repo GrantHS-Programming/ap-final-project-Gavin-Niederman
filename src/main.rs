@@ -170,6 +170,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     return Err("Failed to parse".into());
                 }
             };
+            println!("{:?}", expr);
 
             println!("{:?}", interpret(expr).unwrap());
         }

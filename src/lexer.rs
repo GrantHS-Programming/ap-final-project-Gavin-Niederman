@@ -21,6 +21,8 @@ pub enum Token {
     Comma,
 
     Arrow,
+    Let,
+    In,
 
     Newline,
 
@@ -39,6 +41,33 @@ pub enum Token {
     Eight,
     Nine,
     Zero,
+
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    G,
+    H,
+    I,
+    J,
+    K,
+    L,
+    M,
+    N,
+    O,
+    P,
+    Q,
+    R,
+    S,
+    T,
+    U,
+    V,
+    W,
+    X,
+    Y,
+    Z,
 }
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -69,6 +98,34 @@ impl Display for Token {
             Token::Eight => "8",
             Token::Nine => "9",
             Token::Zero => "0",
+            Token::A => "a",
+            Token::B => "b",
+            Token::C => "c",
+            Token::D => "d",
+            Token::E => "e",
+            Token::F => "f",
+            Token::G => "g",
+            Token::H => "h",
+            Token::I => "i",
+            Token::J => "j",
+            Token::K => "k",
+            Token::L => "l",
+            Token::M => "m",
+            Token::N => "n",
+            Token::O => "o",
+            Token::P => "p",
+            Token::Q => "q",
+            Token::R => "r",
+            Token::S => "s",
+            Token::T => "t",
+            Token::U => "u",
+            Token::V => "v",
+            Token::W => "w",
+            Token::X => "x",
+            Token::Y => "y",
+            Token::Z => "z",
+            Token::Let => "let",
+            Token::In => "in",
         };
 
         write!(f, "{}", string)
@@ -113,6 +170,39 @@ pub fn token() -> impl Parser<char, Token, Error = Simple<char>> {
         _ => unreachable!(),
     });
 
+    let letter = filter(|c: &char| c.is_alphabetic()).map(|c: char| match c {
+        'a' => Token::A,
+        'b' => Token::B,
+        'c' => Token::C,
+        'd' => Token::D,
+        'e' => Token::E,
+        'f' => Token::F,
+        'g' => Token::G,
+        'h' => Token::H,
+        'i' => Token::I,
+        'j' => Token::J,
+        'k' => Token::K,
+        'l' => Token::L,
+        'm' => Token::M,
+        'n' => Token::N,
+        'o' => Token::O,
+        'p' => Token::P,
+        'q' => Token::Q,
+        'r' => Token::R,
+        's' => Token::S,
+        't' => Token::T,
+        'u' => Token::U,
+        'v' => Token::V,
+        'w' => Token::W,
+        'x' => Token::X,
+        'y' => Token::Y,
+        'z' => Token::Z,
+        _ => unreachable!(),
+    });
+
+    let let_ = just("let").to(Token::Let);
+    let in_ = just("in").to(Token::In);
+
     choice((
         // Arrow must take priority over minus
         arrow,
@@ -131,6 +221,10 @@ pub fn token() -> impl Parser<char, Token, Error = Simple<char>> {
         true_,
         false_,
         quote,
+        let_,
+        in_,
         number,
-    )).padded_by(just(" ").repeated())
+        letter,
+    ))
+    .padded_by(just(" ").repeated())
 }
