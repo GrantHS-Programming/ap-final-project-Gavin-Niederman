@@ -1,1 +1,1 @@
-{}-> let willy = {}->100 in :willy {}
+{}->let blah={}->10 in :blah{} + 10

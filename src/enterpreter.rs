@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use crate::parser::{Expr, LiteralValue};
 
+#[derive(Clone)]
 struct Context {
     pub idents: HashMap<String, Expr>
 }
@@ -27,7 +28,7 @@ fn interpret_expr(expr: Expr, mut ctx: Context) -> Result<LiteralValue, String> 
                 }
                 Expr::Ident(ident) => {
                     println!("ident_call");
-                    let LiteralValue::Function { body} = interpret_expr(Expr::Ident(ident), ctx)? else {
+                    let LiteralValue::Function { body} = interpret_expr(Expr::Ident(ident), ctx.clone())? else {
                         return Err("Cannot call a non function".into())
                     };
                         interpret_expr(*body, ctx)
@@ -50,5 +51,14 @@ fn interpret_expr(expr: Expr, mut ctx: Context) -> Result<LiteralValue, String> 
             ctx.idents.insert(ident, *value);
             interpret_expr(*body, ctx)
         },
+        Expr::Grouping(expr) => interpret_expr(*expr, ctx),
+        Expr::Addition { lhs, rhs } => {
+            let lits = (interpret_expr(*lhs, ctx.clone())?,interpret_expr(*rhs, ctx.clone())?);
+            match lits {
+                (LiteralValue::Number(lhs), LiteralValue::Number(rhs)) => Ok(LiteralValue::Number(lhs + rhs)),
+                _ => Err("Only numbers can be added together".into())
+            }
+        },
+        
     }
 }

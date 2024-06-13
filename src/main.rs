@@ -1,10 +1,8 @@
-use std::{error::Error, fmt::format};
+use std::error::Error;
 
-use ariadne::{sources, ColorGenerator, Config, Label, Report, Span};
+use ariadne::{sources, ColorGenerator, Label, Report, Span};
 use chumsky::{primitive::end, Parser};
-use clap::builder::Str;
 use enterpreter::interpret;
-use lexer::Token;
 use parser::expr;
 
 mod lexer;

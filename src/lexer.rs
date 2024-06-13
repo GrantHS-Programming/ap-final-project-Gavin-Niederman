@@ -1,7 +1,6 @@
 use std::fmt::Display;
 
 use chumsky::prelude::*;
-use text::digits;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Token {
@@ -25,6 +24,7 @@ pub enum Token {
     In,
 
     Newline,
+    Space,
 
     True,
     False,
@@ -126,6 +126,7 @@ impl Display for Token {
             Token::Z => "z",
             Token::Let => "let",
             Token::In => "in",
+            Token::Space => " ",
         };
 
         write!(f, "{}", string)
@@ -150,6 +151,7 @@ pub fn token() -> impl Parser<char, Token, Error = Simple<char>> {
     let arrow = just("->").to(Token::Arrow);
 
     let newline = just("\n").to(Token::Newline);
+    let space = just(" ").to(Token::Space);
 
     let true_ = just("true").to(Token::True);
     let false_ = just("false").to(Token::False);
@@ -218,6 +220,7 @@ pub fn token() -> impl Parser<char, Token, Error = Simple<char>> {
         right_paren,
         comma,
         newline,
+        space,
         true_,
         false_,
         quote,

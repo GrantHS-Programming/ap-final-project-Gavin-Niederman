@@ -20,10 +20,22 @@ pub enum Expr {
         ident: Box<Expr>,
         value: Box<Expr>,
         body: Box<Expr>
+    },
+    Grouping(Box<Expr>),
+    Addition {
+        lhs: Box<Expr>,
+        rhs: Box<Expr>
     }
 }
 
-fn literal() -> impl Parser<Token, LiteralValue, Error = Simple<Token>> {
+pub fn is_ident_reserved(ident: impl AsRef<str>) -> bool {
+    match ident.as_ref() {
+        "add" => true,
+        _ => false,
+    }
+}
+
+fn literal() -> impl Parser<Token, LiteralValue, Error = Simple<Token>> + Clone {
     let boolean = just(Token::True)
         .or(just(Token::False))
         .map(|boolean| match boolean {
@@ -69,8 +81,8 @@ fn literal() -> impl Parser<Token, LiteralValue, Error = Simple<Token>> {
     choice((boolean, number))
 }
 
-fn ident() -> impl Parser<Token, Expr, Error = Simple<Token>> {
-    filter(|t| match t {
+fn ident(allow_reserved: bool) -> impl Parser<Token, Expr, Error = Simple<Token>> + Clone {
+      filter(|t| match t {
         Token::A => true,
         Token::B => true,
         Token::C => true,
@@ -101,12 +113,29 @@ fn ident() -> impl Parser<Token, Expr, Error = Simple<Token>> {
     })
     .map(|t| t.to_string())
     .repeated()
-    .map(|chars| Expr::Ident(chars.into_iter().collect()))
+    .at_least(1)
+    .map(|chars| chars.into_iter().collect())
+    .validate(move |string: String, span, emit| {if !allow_reserved && is_ident_reserved(&string) {
+            emit(Simple::custom(span, format!("'{string}' is a reserved keyword")));   
+        }
+        Expr::Ident(string)
+    })
 }
 
 pub fn expr() -> impl Parser<Token, Expr, Error = Simple<Token>> {
     recursive(|expr| {
-        let literal = literal().map(Expr::Literal);
+        let grouping = just(Token::LeftParen).ignore_then(expr.clone()).then_ignore(just(Token::RightParen)).map(|e| Expr::Grouping(Box::new(e)));
+        let literal = literal().map(Expr::Literal).or(grouping);
+        let p_ident = ident(true).or(literal);
+
+        let call = just(Token::Colon)
+            .ignore_then(expr.clone())
+            .then_ignore(just(Token::LeftBrace))
+            .then_ignore(just(Token::RightBrace))
+            .map(|expr| Expr::Call {
+                fun: Box::new(expr),
+            })
+            .or(p_ident);
 
         let function = just(Token::LeftBrace)
             .ignored()
@@ -115,24 +144,22 @@ pub fn expr() -> impl Parser<Token, Expr, Error = Simple<Token>> {
             .then(expr.clone())
             .map(|(_, expr)| Expr::Literal(LiteralValue::Function {
                 body: Box::new(expr),
-            }));
-
-        let call = just(Token::Colon)
-            .ignore_then(expr.clone())
-            .then_ignore(just(Token::LeftBrace))
-            .then_ignore(just(Token::RightBrace))
-            .map(|expr| Expr::Call {
-                fun: Box::new(expr),
-            });
+            }))
+            .or(call);
 
         let let_ = just(Token::Let)
-            .ignore_then(ident())
+            .ignore_then(ident(false))
             .then_ignore(just(Token::Equals))
             .then(expr.clone())
             .then_ignore(just(Token::In))
             .then(expr)
-            .map(|((ident, value), body)| Expr::Let { ident: Box::new(ident), value: Box::new(value), body: Box::new(body) });
+            .map(|((ident, value), body)| Expr::Let { ident: Box::new(ident), value: Box::new(value), body: Box::new(body) })
+            .or(function);
+        
 
-        call.or(let_).or(function).or(literal).or(ident())
+        let addition = let_.clone().then_ignore(just(Token::Plus)).then(let_.clone()).map(|(lhs, rhs)| Expr::Addition { lhs: Box::new(lhs), rhs: Box::new(rhs) }).or(let_);
+
+        
+        addition
     })
 }
